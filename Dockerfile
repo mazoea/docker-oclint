@@ -1,14 +1,24 @@
 FROM ubuntu:20.04
 
-WORKDIR /opt/src/
+WORKDIR /opt/
+
+COPY assets/apt-requirements.txt /opt/apt-requirements.txt
+
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get -qq update && \
+    xargs apt-get -q install -y < /opt/apt-requirements.txt
    
-COPY assets/oclint-22.02-llvm-13.0.1-x86_64-linux-ubuntu-20.04.tar.gz /opt/src/
+COPY assets/oclint-22.02-llvm-13.0.1-x86_64-linux-ubuntu-20.04.tar.gz /opt/
 
 RUN tar xvzf ./oclint-22.02-llvm-13.0.1-x86_64-linux-ubuntu-20.04.tar.gz && \
-    cp -aR ./oclint-22.02/bin/* /usr/bin && \
     rm -f ./oclint-22.02-llvm-13.0.1-x86_64-linux-ubuntu-20.04.tar.gz
 
-RUN oclint --version
+ENV PATH=/opt/oclint-22.02/bin:$PATH
+COPY assets/include /mazoea/installation/include
+COPY assets/run.sh /opt/run.sh
 
-ENTRYPOINT [ "oclint" ]
-CMD [ "--version" ]
+RUN g++ --version || true && \
+    gcc --version || true && \
+    oclint --version
+
+ENTRYPOINT [ "/opt/run.sh" ]
